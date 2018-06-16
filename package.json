@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/at0g/nunjucks-loader",
   "dependencies": {
-    "loader-utils": "^0.2.12",
+    "loader-utils": "^1.1.0",
     "slash": "~1.0.0"
   },
   "peerDependencies": {
@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "chai": "^2.1.2",
+    "loader-runner": "^2.3.0",
     "mocha": "^2.2.1",
     "mocha-loader": "^0.7.1",
     "nunjucks": "^2.5.0",
