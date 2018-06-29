@@ -116,7 +116,7 @@ module.exports = {
             {
                 test: /\.(njk|nunjucks)$/,
                 loader: 'nunjucks-loader',
-                query: {
+                options: {
                     config: __dirname + '/src/nunjucks.config.js'
                 }
             }
@@ -147,7 +147,7 @@ module.exports = {
             {
                 test: /\.(njk|nunjucks)$/,
                 loader: 'nunjucks-loader',
-                query: {
+                options: {
                     config: __dirname + '/src/nunjucks.config.js',
                     quiet: true // Don't show the 'Cannot configure nunjucks environment before precompile' warning
                 }
@@ -189,7 +189,7 @@ module.exports = {
             {
                 test: /\.(nunj|nunjucks)$/,
                 loader: 'nunjucks-loader',
-                query: {
+                options: {
                     root: __dirname + '/path/to/templates'
                 }
             }
@@ -213,7 +213,7 @@ module.exports = {
             {
                 test: /\.(nunj|nunjucks)$/,
                 loader: 'nunjucks-loader',
-                query: {
+                options: {
                     jinjaCompat: true
                 }
             }

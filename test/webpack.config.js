@@ -4,35 +4,34 @@ module.exports = {
 
     context: __dirname,
 
-    entry: 'mocha!./web.js',
+    entry: './web.js',
 
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.(njk|nunjucks)$/,
-                loader: 'index',
-                query: {
+                loader: '../index.js',
+                options: {
                     jinjaCompat: true,
                     config: __dirname + '/nunjucks.config.js'
                 }
             },
             {
+                test: /\/web.js$/,
+                loader: 'mocha-loader'
+            },
+            {
                 test: /\.txt$/,
-                loader: 'raw'
+                loader: 'raw-loader'
             }
         ]
     },
 
     resolve: {
-        root: [
-            __dirname,
+        modules: [
+            __dirname + '/../node_modules',
             __dirname + '/fixtures/templates',
             __dirname + '/fixtures/custom_modules'
         ]
-    },
-
-    resolveLoader: {
-        modulesDirectories: ['web_loaders', 'web_modules', 'node_loaders', 'node_modules', '../']
     }
-
 };

@@ -12,7 +12,7 @@ module.exports = {
             {
                 test: /\.(nunj|nunjucks)$/,
                 loader: 'nunjucks-loader',
-                query: {
+                options: {
                     config: __dirname + '/src/nunjucks.config.js'
                 }
             }

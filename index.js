@@ -31,7 +31,7 @@ function loadConfig(path, loaders) {
     });
 }
 
-function configureWarning(message) {
+function configurationWarning(message) {
     return 'Cannot configure nunjucks environment before precompile\n' +
         '\t' + message + '\n' +
         'Async filters and custom extensions are unsupported when the nunjucks\n' +
@@ -40,47 +40,10 @@ function configureWarning(message) {
         'with nunjucks, you can safely ignore this warning.';
 }
 
-function getEnv(loaderContext, options) {
-    var envPromise = _getEnv(loaderContext, options);
-    getEnv = function () {
-        return envPromise;
-    };
-    return envPromise;
-}
-
-function _getEnv(loaderContext, options) {
-    return Promise.resolve(new nunjucks.Environment());
-    if (!options) {
-        return Promise.resolve(new nunjucks.Environment());
-    }
-
-    var env = new nunjucks.Environment([], options.opts);
-
-    if (!options.config) {
-        return Promise.resolve(env);
-    }
-
-    return loadConfig(options.config, loaderContext.loaders)
-        .then(
-            function (configure) {
-                return configure(env);
-            },
-            function (e) {
-                if (e.code === 'MODULE_NOT_FOUND') {
-                    if (!options.quiet) {
-                        loaderContext.emitWarning(configureWarning(e.message));
-                    }
-                    return env;
-                }
-                throw e;
-            }
-        );
-}
-
-function buildModule(loaderContext, env, name, content, options) {
+function buildModule(env, name, content, options, configPath, shimPath) {
     var nunjucksCompiledStr = nunjucks.precompileString(content, {
         env: env,
-        name: name
+        name: slash(name)
     });
 
     nunjucksCompiledStr = nunjucksCompiledStr.replace(/window\.nunjucksPrecompiled/g, 'nunjucks.nunjucksPrecompiled');
@@ -110,7 +73,7 @@ function buildModule(loaderContext, env, name, content, options) {
     compiledTemplate += '\tenv = nunjucks.currentEnv;\n';
     compiledTemplate += '}\n';
     if (options.config) {
-        compiledTemplate += 'var configure = require("' + slash(path.relative(loaderContext.context, options.config)) + '")(env);\n';
+        compiledTemplate += 'var configure = require("' + slash(configPath) + '")(env);\n';
     }
 
 
@@ -143,7 +106,7 @@ function buildModule(loaderContext, env, name, content, options) {
     compiledTemplate += '\n\n\n\n';
 
     // Include a shim module (by reference rather than inline) that modifies the nunjucks runtime to work with the loader.
-    compiledTemplate += 'var shim = require("' + slash(path.resolve(loaderContext.context, __dirname + '/runtime-shim')) + '");\n';
+    compiledTemplate += 'var shim = require("' + slash(shimPath) + '");\n';
     compiledTemplate += '\n\n';
 
     // Write the compiled template string
@@ -152,29 +115,66 @@ function buildModule(loaderContext, env, name, content, options) {
     compiledTemplate += '\n\n';
 
     // export the shimmed module
-    compiledTemplate += 'module.exports = shim(nunjucks, env, nunjucks.nunjucksPrecompiled["' + name + '"] , dependencies)';
+    compiledTemplate += 'module.exports = shim(nunjucks, env, nunjucks.nunjucksPrecompiled["' + slash(name) + '"] , dependencies)';
 
     return compiledTemplate;
 }
 
-module.exports = function (content) {
-    var callback = this.async();
+function getEnv(options, loaderContext) {
+    return Promise.resolve(new nunjucks.Environment());
+    if (!options) {
+        return Promise.resolve(new nunjucks.Environment());
+    }
 
+    var env = new nunjucks.Environment([], options);
+
+    if (!options.config) {
+        return Promise.resolve(env);
+    }
+
+    return loadConfig(options.config, loaderContext.loaders)
+        .catch(function (e) {
+            if (e.code === 'MODULE_NOT_FOUND') {
+                if (!options.quiet) {
+                    loaderContext.emitWarning(configurationWarning(e.message));
+                }
+                return env;
+            }
+            throw e;
+        })
+        .then(function (configure) {
+            configure(env);
+            return env;
+        });
+}
+
+module.exports = function (content) {
     if (this.target !== 'web') {
         throw new Error('[nunjucks-loader] non-web targets are not supported');
     }
 
     this.cacheable();
 
+    var callback = this.async();
     var options = loaderUtils.getOptions(this);
-    var name = slash(path.relative(options.root || this.rootContext || this.options.context, this.resourcePath));
-
-    getEnv(this, options).then(
-        function (env) {
-            callback(null, buildModule(this, env, name, content, options));
-        }.bind(this),
-        function (e) {
-            this.emitError(e.message);
-        }.bind(this)
-    );
+    getEnv(options, this)
+        .then(function (env) {
+            return buildModule(
+                env,
+                path.relative(options.root || this.rootContext || this.options.context, this.resourcePath),
+                content,
+                options,
+                path.relative(this.context, options.config),
+                path.resolve(this.context, __dirname + '/runtime-shim')
+            );
+        }.bind(this))
+        .then(
+            function (result) {
+                callback(null, result);
+            },
+            function (e) {
+                this.emitError(e.message);
+                callback(e);
+            }.bind(this)
+        );
 };
