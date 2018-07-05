@@ -1,37 +1,35 @@
+const path = require('path');
+const entry = path.resolve(__dirname, './web.js');
+
 module.exports = {
-
-    target: 'web',
-
+    devtool: 'none',
     context: __dirname,
-
-    entry: './web.js',
-
+    entry: entry,
     module: {
         rules: [
             {
+                resource: entry,
+                loader: 'mocha-loader',
+            },
+            {
                 test: /\.(njk|nunjucks)$/,
-                loader: '../src/index.js',
+                loader: path.resolve(__dirname, '../dist/index.js'),
                 options: {
                     jinjaCompat: true,
-                    config: __dirname + '/nunjucks.config.js'
+                    config: path.resolve(__dirname, 'nunjucks.config.js'),
                 }
             },
             {
-                test: /\/web.js$/,
-                loader: 'mocha-loader'
-            },
-            {
                 test: /\.txt$/,
-                loader: 'raw-loader'
-            }
-        ]
+                loader: 'raw-loader',
+            },
+        ],
     },
-
     resolve: {
         modules: [
-            __dirname + '/../node_modules',
-            __dirname + '/fixtures/templates',
-            __dirname + '/fixtures/custom_modules'
-        ]
-    }
+            path.resolve(__dirname, '../node_modules'),
+            path.resolve(__dirname, 'fixtures/templates'),
+            path.resolve(__dirname, 'fixtures/custom_modules'),
+        ],
+    },
 };

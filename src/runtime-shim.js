@@ -1,4 +1,4 @@
-module.exports = function (nunjucks, env, obj, dependencies){
+module.exports = function (nunjucks, env, obj, dependencies) {
 
     var oldRoot = obj.root;
 

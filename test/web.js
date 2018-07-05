@@ -4,8 +4,8 @@ g.chai = require('chai');
 g.should = chai.should();
 
 require('./spec/paths');
-require('./spec/inheritance');
-require('./spec/environment');
-require('./spec/includes');
-require('./spec/require');
-require('./spec/nunjucks-loader');
+// require('./spec/inheritance');
+// require('./spec/environment');
+// require('./spec/includes');
+// require('./spec/require');
+// require('./spec/nunjucks-loader');
