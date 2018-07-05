@@ -10,7 +10,7 @@ module.exports = {
         rules: [
             {
                 test: /\.(njk|nunjucks)$/,
-                loader: '../index.js',
+                loader: '../src/index.js',
                 options: {
                     jinjaCompat: true,
                     config: __dirname + '/nunjucks.config.js'
