@@ -2,9 +2,12 @@ const path = require('path');
 const entry = path.resolve(__dirname, './web.js');
 
 module.exports = {
-    devtool: 'none',
+    devtool: 'inline-source-map',
     context: __dirname,
     entry: entry,
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+    },
     module: {
         rules: [
             {
@@ -13,7 +16,7 @@ module.exports = {
             },
             {
                 test: /\.(njk|nunjucks)$/,
-                loader: path.resolve(__dirname, '../dist/index.js'),
+                loader: 'nunjucks-loader',
                 options: {
                     jinjaCompat: true,
                     config: path.resolve(__dirname, 'nunjucks.config.js'),
@@ -25,7 +28,15 @@ module.exports = {
             },
         ],
     },
+    resolveLoader: {
+        alias: {
+            'nunjucks-loader': path.resolve(__dirname, '..'),
+        },
+    },
     resolve: {
+        alias: {
+            'nunjucks-loader': path.resolve(__dirname, '..'),
+        },
         modules: [
             path.resolve(__dirname, '../node_modules'),
             path.resolve(__dirname, 'fixtures/templates'),

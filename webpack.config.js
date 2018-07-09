@@ -3,14 +3,14 @@ const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
     target: 'node',
-    devtool: 'none',
+    devtool: 'inline-source-map',
     context: path.resolve('src'),
     entry: {
         index: './index.js',
         'runtime-shim': './runtime-shim.js',
     },
     output: {
-        library: 'nunjucksLoader',
+        libraryExport: 'default',
         libraryTarget: 'umd',
     },
     externals: [

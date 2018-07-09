@@ -2,10 +2,11 @@
   "name": "nunjucks-loader",
   "version": "3.0.0",
   "description": "A nunjucks loader for webpack.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "webpack --mode=development",
-    "test": "webpack-dev-server --config test/webpack.config.js --mode=none"
+    "build-test": "webpack --config test/webpack.config.js --mode=none",
+    "test": "webpack-dev-server --config test/webpack.config.js --mode=development"
   },
   "repository": {
     "type": "git",

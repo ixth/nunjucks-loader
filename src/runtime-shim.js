@@ -1,46 +1,39 @@
-module.exports = function (nunjucks, env, obj, dependencies) {
+export default (nunjucks, env, obj, dependencies) => {
+    const oldRoot = obj.root;
 
-    var oldRoot = obj.root;
+    obj.root = (env, context, frame, runtime, ignoreMissing, cb) => {
+        const oldGetTemplate = env.getTemplate;
 
-    obj.root = function( env, context, frame, runtime, ignoreMissing, cb ) {
-        var oldGetTemplate = env.getTemplate;
-        env.getTemplate = function (name, ec, parentName, ignoreMissing, cb) {
-            if( typeof ec === "function" ) {
-                cb = ec = false;
+        env.getTemplate = (name, eager, parentName, ignoreMissing, cb) => {
+            if (typeof eager === 'function') {
+                cb = eager = false;
             }
-            var _require = function (name) {
-                try {
-                    // add a reference to the already resolved dependency here
-                    return dependencies[name];
+
+            const _require = (name) => {
+                // add a reference to the already resolved dependency here
+                if (dependencies.hasOwnProperty(name)) {
+                    return dependencies[name]
                 }
-                catch (e) {
-                    if (frame.get("_require")) {
-                        return frame.get("_require")(name);
-                    }
-                    else {
-                        console.warn('Could not load template "%s"', name);
-                    }
+                if (frame.get('_require') && frame.get('_require') !== _require) {
+                    return frame.get('_require')(name);
                 }
+                console.warn(`Could not load template "${name}"`);
             };
 
-            var tmpl = _require(name);
-            frame.set("_require", _require);
+            frame.set('_require', _require);
 
-            if( ec ) tmpl.compile();
-            cb( null, tmpl );
+            const tmpl = _require(name);
+            if (eager) {
+                tmpl.compile();
+            }
+            cb(null, tmpl);
         };
 
-        oldRoot(env, context, frame, runtime, ignoreMissing, function (err, res) {
+        oldRoot(env, context, frame, runtime, ignoreMissing, (err, res) => {
             env.getTemplate = oldGetTemplate;
-            cb( err, res );
+            cb(err, res);
         });
     };
 
-    var src = {
-        obj: obj,
-        type: 'code'
-    };
-
-    return new nunjucks.Template(src, env);
-
+    return new nunjucks.Template({ type: 'code', obj }, env);
 };

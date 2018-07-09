@@ -19,7 +19,7 @@ async function loadConfig(resource, loaders) {
     return eval(result);
 }
 
-function getDependencied(nunjucksCompiledStr) {
+function getDependencies(nunjucksCompiledStr) {
     const dependencyRegEx = /env\.getTemplate\(\"(.*?)\"/g;
     const dependencies = [];
     let match;
@@ -33,7 +33,7 @@ function getDependencied(nunjucksCompiledStr) {
     return dependencies;
 }
 
-function buildModule(env, name, content, options, configPath, shimPath) {
+function buildModule(env, name, content, options, configPath) {
     let nunjucksCompiledStr = nunjucks.precompileString(content, {
             env: env,
             name: slash(name)
@@ -47,7 +47,7 @@ function buildModule(env, name, content, options, configPath, shimPath) {
             'require("$1"'
         );
 
-    const imports = getDependencied().map(
+    const imports = getDependencies().map(
         (templateRef) => `dependencies["${templateRef}"] = require("${templateRef}");`
     );
     const installJinjaCompat = (options.jinjaCompat ? 'nunjucks.installJinjaCompat();' : '');
@@ -60,9 +60,9 @@ var env = nunjucks.currentEnv || (nunjucks.currentEnv = new nunjucks.Environment
 ${ configureEnv }
 var dependencies = nunjucks.webpackDependencies || (nunjucks.webpackDependencies = {});
 ${ imports.join('\n') }
-var shim = require("${slash(shimPath)}");
+var shim = require("nunjucks-loader/dist/runtime-shim");
 ${nunjucksCompiledStr}
-module.exports = shim(nunjucks, env, nunjucks.nunjucksPrecompiled["${slash(name)}"] , dependencies)`;
+module.exports = shim(nunjucks, env, nunjucks.nunjucksPrecompiled["${slash(name)}"] , dependencies);`;
 }
 
 async function getEnv(options, loaderContext) {
@@ -98,7 +98,7 @@ with nunjucks, you can safely ignore this warning.`);
    return env;
 }
 
-module.exports = asyncLoader(async function (content) {
+export default asyncLoader(async function (content) {
     if (this.target !== 'web') {
         throw new Error('[nunjucks-loader] non-web targets are not supported');
     }
@@ -112,8 +112,7 @@ module.exports = asyncLoader(async function (content) {
             path.relative(options.root || this.rootContext || this.options.context, this.resourcePath),
             content,
             options,
-            path.relative(this.context, options.config),
-            path.resolve(__dirname, 'runtime-shim')
+            path.relative(this.context, options.config)
         ),
     };
 });
