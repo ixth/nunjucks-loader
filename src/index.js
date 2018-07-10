@@ -32,7 +32,7 @@ const loadConfigure = (loaderContext, request) =>
 
 
 function getDependencies(nunjucksCompiledStr) {
-    const dependencyRegEx = /env\.getTemplate\(\"(.*?)\"/g;
+    const dependencyRegEx = /env\.getTemplate\("(.*?)"/g;
     const dependencies = [];
     let match;
     while (match = dependencyRegEx.exec(nunjucksCompiledStr)) {
@@ -72,14 +72,14 @@ var env = nunjucks.currentEnv || (nunjucks.currentEnv = new nunjucks.Environment
 ${ configureEnv }
 var dependencies = nunjucks.webpackDependencies || (nunjucks.webpackDependencies = {});
 ${ imports.join('\n') }
-var shim = require("nunjucks-loader/dist/runtime-shim");
 ${nunjucksCompiledStr}
-module.exports = shim(nunjucks, env, nunjucks.nunjucksPrecompiled["${slash(name)}"] , dependencies);`;
+module.exports = new nunjucks.Template({
+    type: 'code',
+    obj: nunjucks.nunjucksPrecompiled["${slash(name)}"]
+}, env);`;
 }
 
 async function getEnv(options, loaderContext) {
-    return new nunjucks.Environment();
-
     if (!options) {
         return new nunjucks.Environment();
     }
