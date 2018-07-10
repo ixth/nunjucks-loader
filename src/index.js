@@ -11,13 +11,25 @@ import nunjucks from 'nunjucks';
 import slash from 'slash';
 import path from 'path';
 import loaderUtils from 'loader-utils';
-import loaderRunner from 'loader-runner';
 import { asyncLoader } from './async-loader';
+import evalModule from './eval-module';
 
-async function loadConfig(resource, loaders) {
-    const { result } = await loaderRunner.runLoaders({resource, loaders});
-    return eval(result);
-}
+const loadConfigure = (loaderContext, request) =>
+    new Promise((resolve, reject) => {
+        loaderContext.loadModule(request, (err, source) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            const configure = evalModule(source).exports;
+            if (!(configure instanceof Function)) {
+                reject(new TypeError(`${request}: expect module to export function, got ${typeof configure}`));
+                return;
+            }
+            resolve(configure);
+        });
+    });
+
 
 function getDependencies(nunjucksCompiledStr) {
     const dependencyRegEx = /env\.getTemplate\(\"(.*?)\"/g;
@@ -79,7 +91,7 @@ async function getEnv(options, loaderContext) {
     }
 
     try {
-        const configure = loadConfig(options.config, loaderContext.loaders);
+        const configure = await loadConfigure(loaderContext, options.config);
         configure(env);
     } catch (e) {
         if (e.code === 'MODULE_NOT_FOUND') {
